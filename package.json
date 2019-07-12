@@ -1,0 +1,17 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "node nmap findings utility",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "abhishek dhawan",
+  "license": "ISC",
+  "dependencies": {
+    "node-nmap": "^4.0.0",
+    "request": "^2.88.0",
+    "winston": "^3.2.1",
+    "yargs": "^13.2.2"
+  }
+}
