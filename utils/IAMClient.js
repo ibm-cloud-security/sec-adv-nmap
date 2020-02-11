@@ -13,7 +13,7 @@ async function getIamToken(iamTokenUrl, apikey){
             
         }
     }
-    const response = await rest.call("POST", iamTokenUrl, options).catch((err)=>{throw Error("IAM token retreival failed " + err)})
+    const response = await rest.call("POST", iamTokenUrl, options).catch((err)=>{throw Error("IAM token retrieval failed " + err)})
     const tokens = JSON.parse(response.body)
     return tokens.access_token
     
