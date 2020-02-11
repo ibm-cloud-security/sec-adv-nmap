@@ -4,7 +4,7 @@
 2. Nodejs must be installed and `node`command must be available in system's path.  
    Download nodejs from : https://nodejs.org/en/download/
 3. OS : This application is dependent on Nodejs and Nmap and can be used on Windows,MacOS and other linux distributions.
-4. Obtain your IBM CLoud Account ID :  
+4. Obtain your IBM Cloud Account ID :  
    To get Account ID from your IBM CLoud account via web browser:  
        Login in to you IBM CLoud account from web browser of your choice.
        Click `Manage` from top bar and then click `Account`  
