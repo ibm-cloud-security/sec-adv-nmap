@@ -63,8 +63,4 @@ Eg.`node ./src/app.js <scan_type> -t <IPv4 address> --updateDashboardCard 'yes'`
 
 ### Deleting Card from Security Advisor\'s Dashboard:      
 Nmap findings card created by this utility can be deleted using following command :   
-`node ./src/app.js deleteCard` 
-
-
-### An example of Findings in Dashboard:  
-![](https://github.ibm.com/security-services/security-advisor-project-management/blob/master/NmapFindings.png)
+`node ./src/app.js deleteCard`
