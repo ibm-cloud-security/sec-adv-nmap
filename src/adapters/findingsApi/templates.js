@@ -11,7 +11,7 @@ const findingsId_network = conf.config.findingsId_network
 const findingsId_datalink = conf.config.findingsId_datalink
 const sectionName = conf.config.sectionName
 
-//Tempelate for nmap findings card
+//Template for nmap findings card
 var createNewCardTemplate = {
 
   "kind": "CARD",
