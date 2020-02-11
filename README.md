@@ -5,14 +5,14 @@
    Download nodejs from : https://nodejs.org/en/download/
 3. OS : This application is dependent on Nodejs and Nmap and can be used on Windows,MacOS and other linux distributions.
 4. Obtain your IBM Cloud Account ID :  
-   To get Account ID from your IBM CLoud account via web browser:  
-       Login in to you IBM CLoud account from web browser of your choice.
+   To get Account ID from your IBM Cloud account via web browser:  
+       Login in to you IBM Cloud account from web browser of your choice.
        Click `Manage` from top bar and then click `Account`  
        CLick `Account settings` from left navigation bar, you can find your Account's ID under title Account
 5. Generating API key:  
        Login in to your IBM Cloud account
        Click `Manage` from top bar and then click `Access(IAM)`  
-       Click `IBM CLoud API Keys` from left navigation bar  
+       Click `IBM Cloud API Keys` from left navigation bar  
        Then click `Create an IBM Cloud API key` button. Provide Name and Description of your choice and click create  
        You can then copy  or download your API key.
 
