@@ -69,7 +69,7 @@ function exportedFunction() {
             },
         }
 
-        options.body = JSON.stringify(templates.createNewCardTemepelate)
+        options.body = JSON.stringify(templates.createNewCardTemplate)
 
         if (updateDashboardCard === 'yes') {
             logger.log("debug", "Card update in progress")

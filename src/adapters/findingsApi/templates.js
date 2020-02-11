@@ -12,7 +12,7 @@ const findingsId_datalink = conf.config.findingsId_datalink
 const sectionName = conf.config.sectionName
 
 //Tempelate for nmap findings card
-var createNewCardTemepelate = {
+var createNewCardTemplate = {
 
   "kind": "CARD",
   "provider_id": providerId,
@@ -80,4 +80,4 @@ var createNewCardTemepelate = {
 }
 
 
-module.exports.createNewCardTemepelate = createNewCardTemepelate
+module.exports.createNewCardTemplate = createNewCardTemplate
