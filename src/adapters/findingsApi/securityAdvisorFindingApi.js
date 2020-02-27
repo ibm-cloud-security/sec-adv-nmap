@@ -2,6 +2,8 @@ const restClient = require("../../../utils/restClient")();
 const templates = require('./templates')
 const iamClient = require('../../../utils/IAMClient')
 const conf = require('./config')
+const findingApi = require('ibm-security-advisor/findings-api/v1')
+const {BearerTokenAuthenticator} = require('ibm-security-advisor/auth')
 
 var exports = module.exports = exportedFunction
 
@@ -15,14 +17,13 @@ function exportedFunction() {
 
     let findingsApiEndPoints = {
 
-        'us-south': 'https://us-south.secadvisor.cloud.ibm.com/findings/v1/',
-        'eu-gb': 'https://eu-gb.secadvisor.cloud.ibm.com/findings/v1/'
+        'us-south': 'https://us-south.secadvisor.cloud.ibm.com/findings',
+        'eu-gb': 'https://eu-gb.secadvisor.cloud.ibm.com/findings'
 
     }
 
     async function recordFindings(iamEndpoint, apiKey, accountId, providerId, region, cardId, updateDashboardCard, findingsID, scanResults, logger) {
-        let cardStatus = await ifCardExist(iamEndpoint, apiKey, accountId, providerId, cardId, region).catch((err) => { throw err })
-
+        let cardStatus = await ifCardExist(iamEndpoint, apiKey, accountId, providerId, cardId, region).catch((err) => { throw(err) })
         if (cardStatus === 404 || updateDashboardCard === 'yes') {
             if (cardStatus === 404) {
                 updateDashboardCard = 'no'
@@ -42,49 +43,64 @@ function exportedFunction() {
 
 
     async function ifCardExist(iamEndpoint, apiKey, accountId, providerId, cardId, region) {
-
         const bearerToken = await iamClient.getIamToken(iamEndpoint, apiKey)
-        let options = {
-            headers: {
-                "accept": "application/json",
-                "authorization": "Bearer " + bearerToken,
-                "content-type": "application/json"
-            },
-        }
-
-        const urlToVerifyIfCardExist = findingsApiEndPoints[region] + accountId + '/providers/' + providerId + '/notes/' + cardId
-        const response = await restClient.call("GET", urlToVerifyIfCardExist, options).catch((err) => { throw "Request to check if card already exists failed " + err })
-        return response.statusCode
+        const client = new findingApi({
+            serviceUrl: findingsApiEndPoints[region],
+            authenticator: new BearerTokenAuthenticator({
+                bearerToken: bearerToken
+            })
+        })
+        let response = await client.getNote({
+            accountId: accountId,
+            providerId: providerId,
+            noteId: cardId
+        }).catch(err => { if(err.code === 404){ return err.code } else{ throw(err) }
+        }).then(resp => { return resp })
+        return response
     }
 
     //Create card
     async function createOrUpdateCard(iamEndpoint, apiKey, accountId, providerId, region, updateDashboardCard, logger, cardId) {
         //updateCard can be used when need to update card from cli
+        
         const bearerToken = await iamClient.getIamToken(iamEndpoint, apiKey)
-        let options = {
-            headers: {
-                "accept": "application/json",
-                "authorization": "Bearer " + bearerToken,
-                "content-type": "application/json"
-            },
-        }
-
-        options.body = JSON.stringify(templates.createNewCardTemplate)
-
+        const client = new findingApi({
+            serviceUrl: findingsApiEndPoints[region],
+            authenticator: new BearerTokenAuthenticator({
+                bearerToken: bearerToken
+            })
+        })
+        let body = templates.createNewCardTemplate
         if (updateDashboardCard === 'yes') {
             logger.log("debug", "Card update in progress")
-            let urlToCreateNewCard = findingsApiEndPoints[region] + accountId + '/providers/' + providerId + '/notes/' + cardId
-            let response = await restClient.call("PUT", urlToCreateNewCard, options).catch((err) => { throw "Update card request failed " + err })
-            logger.log("debug", "Card update request\'s response code is: "+ response.statusCode)
+            let response = await client.updateNote({
+                accountId: accountId,
+                providerId: providerId,
+                shortDescription: body.short_description,
+                longDescription: body.long_description,
+                kind: body.kind,
+                noteId: body.id,
+                id: body.id,
+                reportedBy: body.reported_by,
+                card: body.card
+            }).catch(err => { throw(err) })
+            logger.log("debug", "Card update request\'s response code is: "+ response.status)
             return
         }
-
         logger.log("debug", "Card creation in progress")
-        let urlToCreateNewCard = findingsApiEndPoints[region] + accountId + '/providers/' + providerId + '/notes'
-        let response = await restClient.call("POST", urlToCreateNewCard, options).catch((err) => { throw "Create new card request failed " + err })
-        logger.log("debug", "Card creation request\'s response code is: "+ response.statusCode)
+        let response = await client.createNote({
+            accountId: accountId,
+            providerId: providerId,
+            shortDescription: body.short_description,
+            longDescription: body.long_description,
+            kind: body.kind,
+            id: body.id,
+            reportedBy: body.reported_by,
+            card: body.card
+        }).catch(err => { throw(err) })
+        logger.log("debug", "Card creation request\'s response code is: "+ response.status)
 
-        if (response.statusCode === '409') {
+        if (response.status === '409') {
             logger.log("debug", "This looks like conflict issue.Please run scan with argument : --updateDashboardCard 'yes' ")
             process.exit()
         }
@@ -95,20 +111,15 @@ function exportedFunction() {
 
         //create a finding for each KPI
         const findingIdsList = [applicationLayerFindingsID, transportLayerFindingsID, networkLayerFindingsID, dataLinkLayerFindingsID]
-        const totalKPIs = findingIdsList.length
-
-        for (let i = 0; i < totalKPIs; i++) {
-
-            const findingID = findingIdsList[i]
-            const bearerToken = await iamClient.getIamToken(iamEndpoint, apiKey)
-            let options = {
-                headers: {
-                    "accept": "application/json",
-                    "authorization": "Bearer " + bearerToken,
-                    "content-type": "application/json"
-                },
-            }
-            let createNewFinding = {
+        const bearerToken = await iamClient.getIamToken(iamEndpoint, apiKey)
+        const client = new findingApi({
+            serviceUrl: findingsApiEndPoints[region],
+            authenticator: new BearerTokenAuthenticator({
+                bearerToken: bearerToken
+            })
+        })
+        findingIdsList.forEach(async findingID => {
+            let body = {
                 "kind": "FINDING",
                 "short_description": "Nmap finding",
                 "long_description": "Detail of High vulnerabilities",
@@ -129,32 +140,52 @@ function exportedFunction() {
                 }
             }
 
-
-            options.body = JSON.stringify(createNewFinding)
             if (updateDashboardCard === 'yes') {
                 logger.log("debug", "Updating KPIs")
-                let urlToCreateFinding = findingsApiEndPoints[region] + accountId + "/providers/" + providerId + "/notes/" + findingID
-                let response = await restClient.call("PUT", urlToCreateFinding, options).catch((err) => { throw "Update KPIs request failed " + err })
-                logger.log("debug", "KPI update request\'s response code is: " + response.statusCode)
+                let response = client.updateNote({
+                    accountId: accountId,
+                    providerId: providerId,
+                    shortDescription: body.short_description,
+                    longDescription: body.long_description,
+                    kind: body.kind,
+                    noteId: body.id,
+                    id: body.id,
+                    reportedBy: body.reported_by,
+                    finding: body.finding
+                }).catch(err => { throw "UPDATE KPIs request failed "+err })
+                logger.log("debug", "KPI update request\'s response code is: " + response.status)
                 return
             }
             logger.log("debug", "Creating KPIs")
-            let urlToCreateFinding = findingsApiEndPoints[region] + accountId + "/providers/" + providerId + "/notes"
-            let response = await restClient.call("POST", urlToCreateFinding, options).catch((err) => { throw "CREATE KPIs request failed " + err })
-            logger.log("debug", "KPI creation request\'s response code is: "+ response.statusCode)
-            if (response.statusCode === '409') {
+            let response = await client.createNote({
+                accountId: accountId,
+                providerId: providerId,
+                shortDescription: body.short_description,
+                longDescription: body.long_description,
+                kind: body.kind,
+                id: body.id,
+                reportedBy: body.reported_by,
+                finding: body.finding
+            }).catch(err => { throw "CREATE KPIs request failed "+err })
+            logger.log("debug", "KPI creation request\'s response code is: "+ response.status)
+            if (response.status === '409') {
                 logger.log("debug", "This looks like conflict issue.Please run scan with argument : --updateDashboardCard 'yes' ")
             }
-        }
+        })
 
     }
 
     //Create Occurrence
     async function createOccurrence(iamEndpoint, apiKey, accountId, providerId, region, results, findingsID, logger) {
-
-        const totalOccurrences = results.length
-        logger.log("debug", "Total occurrence are: ", totalOccurrences)
-        for (let i = 0; i < totalOccurrences; i++) {
+        logger.log("debug", `Total occurrence are: ${results.length}`)
+        const bearerToken = await iamClient.getIamToken(iamEndpoint, apiKey)
+        const client = new findingApi({
+            serviceUrl: findingsApiEndPoints[region],
+            authenticator: new BearerTokenAuthenticator({
+                bearerToken: bearerToken
+            })
+        })
+        results.forEach(async occurrence => {
             logger.log("debug", "Recording occurrence now")
             let targetIp = ''
             let openPortOrProtocol = ''
@@ -167,42 +198,41 @@ function exportedFunction() {
 
             if (findingsID === 'Nmap-application-layer-findings-type') {
 
-                targetIp = Object.keys(results[i]).toString()
-                openPortOrProtocol = Object.values(results[i])[0][0]
-                serviceOnPort = Object.values(results[i])[0][1]
+                targetIp = Object.keys(occurrence).toString()
+                openPortOrProtocol = Object.values(occurrence)[0][0]
+                serviceOnPort = Object.values(occurrence)[0][1]
                 shortDescription = "Open Port: " + openPortOrProtocol + " Service: " + serviceOnPort
                 longDescription = "Open ports found in Application Layer"
                 resourceType = "Open port in Application layer"
 
             } else if (findingsID === 'Nmap-transport-layer-findings-type') {
 
-                targetIp = Object.keys(results[i]).toString()
-                openPortOrProtocol = Object.values(results[i])[0][0]
-                ipProtocolNumber = Object.values(results[i])[0][1]
+                targetIp = Object.keys(occurrence).toString()
+                openPortOrProtocol = Object.values(occurrence)[0][0]
+                ipProtocolNumber = Object.values(occurrence)[0][1]
                 shortDescription = "Open Protocol: " + openPortOrProtocol + "   , IP Protocol number: " + ipProtocolNumber
                 longDescription = "Hosts available via "+ openPortOrProtocol + " in Transport Layer"
                 resourceType = "Open protocol in Transport layer"
 
             } else if (findingsID === 'Nmap-network-layer-findings-type') {
 
-                targetIp = Object.values(results[i]).toString()
-                shortDescription = Object.keys(results[i]).toString() + targetIp
+                targetIp = Object.values(occurrence).toString()
+                shortDescription = Object.keys(occurrence).toString() + targetIp
                 longDescription = "Hosts available via IP or ARP protocol in Network Layer"
                 resourceType = "Hosts available via IP or ARP in Network Layer"
 
             } else if (findingsID === 'Nmap-datalink-layer-findings-type') {
 
-                targetIp = Object.keys(results[i]).toString()
-                openPortOrProtocol = Object.values(results[i])[0][0]
-                serviceOnPort = Object.values(results[i])[0][1]
+                targetIp = Object.keys(occurrence).toString()
+                openPortOrProtocol = Object.values(occurrence)[0][0]
+                serviceOnPort = Object.values(occurrence)[0][1]
                 shortDescription = "Open Port: " + openPortOrProtocol + " Service: " + serviceOnPort
                 longDescription = "Hosts available via PPP in Data Link layer"
                 resourceType = "Hosts available via PPP in Data Link Layer"
 
             }
 
-
-            let createNewOccurrence = {
+            let body = {
                 "note_name": accountId + "/providers/" + providerId + "/notes/" + findingsID,
                 "kind": "FINDING",
                 "short_description": shortDescription,
@@ -227,60 +257,64 @@ function exportedFunction() {
                 }
             }
 
-            const bearerToken = await iamClient.getIamToken(iamEndpoint, apiKey)
-            let options = {
-                headers: {
-                    "accept": "application/json",
-                    "authorization": "Bearer " + bearerToken,
-                    "content-type": "application/json"
-                },
-            }
-            urlToCreateOccurrence = findingsApiEndPoints[region] + accountId + "/providers/" + providerId + "/occurrences"
-            options.body = JSON.stringify(createNewOccurrence)
-            const response = await restClient.call("POST", urlToCreateOccurrence, options).catch((err) => { throw "Post scan findings request to dashboard Failed " + err })
-            logger.log("debug", "Occurrence creation request\'s response code is: " + response.statusCode)
+            let response = await client.createOccurrence({
+                accountId: accountId,
+                noteName: body.note_name,
+                kind: body.kind,
+                shortDescription: body.short_description,
+                longDescription: body.long_description,
+                remediation: body.remediation,
+                providerId: body.provider_id,
+                id: body.id,
+                context: body.context,
+                reportedBy: body.reported_by,
+                finding: body.finding
+            }).catch(err => { throw "CREATE Occurrences request failed "+err })
+            logger.log("debug", "Occurrence creation request\'s response code is: " + response.status)
 
-        }
+        })
 
     }
 
     async function deleteCard(iamEndpoint, apiKey, accountId, providerId, region, cardID, logger) {
 
         const findingIdsList = [applicationLayerFindingsID, transportLayerFindingsID, networkLayerFindingsID, dataLinkLayerFindingsID]
-        const totalKPIs = findingIdsList.length
-
         const bearerToken = await iamClient.getIamToken(iamEndpoint, apiKey)
-        var options = {
-            headers: {
-                "accept": "application/json",
-                "authorization": "Bearer " + bearerToken,
-            },
-        }
+        const client = new findingApi({
+            serviceUrl: findingsApiEndPoints[region],
+            authenticator: new BearerTokenAuthenticator({
+                bearerToken: bearerToken
+            })
+        })
         logger.log("info", "Deleting Card and KPIs")
 
         //Delete all KPI types
-        for (let i = 0; i < totalKPIs; i++) {
-
-            let urlToDeleteFinding = findingsApiEndPoints[region] + accountId + "/providers/" + providerId + "/notes/" + findingIdsList[i]
-            let response = await restClient.call("DELETE", urlToDeleteFinding, options).catch((err) => { throw "Delete KPI request failed " + err })
+        findingIdsList.forEach(async note => {
             
-            if (response.statusCode != 200) {
-                logger.log("error", "Delete Card/KPI request failed with response code: " + response.statusCode)
+            let response = await client.deleteNote({
+                accountId: accountId,
+                providerId: providerId,
+                noteId: note
+            }).catch(err => { throw "DELETE KPIs request failed "+err })
+            if (response.status != 200) {
+                logger.log("error", "Delete Card/KPI request failed with response code: " + response.status)
                 process.exit(1)
             }
-            logger.log("debug", "KPI deletion request is successful, response code is: "+ response.statusCode)
+            logger.log("debug", "KPI deletion request is successful, response code is: "+ response.status)
 
-        }
+        })
 
         //Delete Card
-        let urlToDeleteCard = findingsApiEndPoints[region] + accountId + "/providers/" + providerId + "/notes/" + cardID
-        let response = await restClient.call("DELETE", urlToDeleteCard, options).catch((err) => { throw "Delete Card request failed " + err })
-        
-        if (response.statusCode != 200) {
-            logger.log("error", "Delete Card request failed with response code: " + response.statusCode)
+        let response = await client.deleteNote({
+            accountId: accountId,
+            providerId: providerId,
+            noteId: cardID
+        }).catch(err => { throw "DELETE Card request failed "+err })
+        if (response.status != 200) {
+            logger.log("error", "Delete Card request failed with response code: " + response.status)
             process.exit(1)
         }
-        logger.log("info", "Card deletion request is successful, response code is: "+ response.statusCode)
+        logger.log("info", "Card deletion request is successful, response code is: "+ response.status)
 
     }
 
