@@ -1,8 +1,4 @@
-let iamEndpoint = 'https://iam.cloud.ibm.com/identity/token'
-
 let config = {
-
-    "iamEndpoint" : iamEndpoint,
     "apiKey" : process.env.apiKey,
     "accountId" : process.env.accountID,
     "providerId" : 'network-scan-nmap',
@@ -15,7 +11,6 @@ let config = {
     "findingsId_network" : "Nmap-network-layer-findings-type",
     "findingsId_datalink" : "Nmap-datalink-layer-findings-type",
     "findingSource" : "Nmap security scan tool",
-
 }
 
 module.exports.config = config
