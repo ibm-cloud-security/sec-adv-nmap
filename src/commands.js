@@ -1,8 +1,5 @@
 const scanners = require('./scanners/networklayers')
 const findingApiAdaptor = require('./adapters/findingsApi')
-//const yargs = require('yargs')
-
-const iamEndpoint = findingApiAdaptor.config.iamEndpoint
 const apiKey = findingApiAdaptor.config.apiKey
 const providerId = findingApiAdaptor.config.providerId
 const accountId = findingApiAdaptor.config.accountId
@@ -89,7 +86,7 @@ function exporterFunction(logger) {
             describe: 'Delete card from Security Advisor\'s Dashboard',
             handler: async function () {
                 logger.log("info", "Deleting card \'"+ cardTitle + "\'" + " from region: " + securityAdvisorDashboardRegion )
-                await findingApiAdaptor.deleteCard(iamEndpoint, apiKey, accountId, providerId, securityAdvisorDashboardRegion, cardId, logger).catch((error) => {
+                await findingApiAdaptor.deleteCard(apiKey, accountId, providerId, securityAdvisorDashboardRegion, cardId, logger).catch((error) => {
                     logger.log("error", "Failed to delete dashboard card")
                     logErrorAndExit(error)
                 })
@@ -137,7 +134,7 @@ function exporterFunction(logger) {
             
 
             logger.log("debug", "Adding  scan results to Dashboard now")
-            await findingApiAdaptor.recordFindings(iamEndpoint, apiKey, accountId, providerId, securityAdvisorDashboardRegion, cardId, updateDashboardCard, kpiId, scanResults, logger).catch((error) => {
+            await findingApiAdaptor.recordFindings(apiKey, accountId, providerId, securityAdvisorDashboardRegion, cardId, updateDashboardCard, kpiId, scanResults, logger).catch((error) => {
                 logger.log("error", "Failed to add findings in Dashboard")
                 logErrorAndExit(error)
             })
