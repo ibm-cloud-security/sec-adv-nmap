@@ -6,16 +6,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "authors": [
-    {
-      "name": "Abhishek Dhawan",
-      "email": "abhdhawa@in.ibm.com"
-    },
-    {
-      "name": "Gaurav Goswami",
-      "email": "gauragos@in.ibm.com"
-    }
-  ],
   "license": "ISC",
   "dependencies": {
     "ibm-security-advisor": "^3.0.1",
