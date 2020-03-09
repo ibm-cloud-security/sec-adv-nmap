@@ -43,7 +43,7 @@ function exporterFunction(logger) {
         });
 
         ifCmdExists.on('close', (code) => {
-            logger.log("info", "Prerequisite check complete,Nmap command is available");
+            logger.log("info", "Prerequisite check complete, Nmap command is available");
         });
     }
 
