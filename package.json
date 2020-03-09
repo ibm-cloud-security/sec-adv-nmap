@@ -1,14 +1,14 @@
 {
-  "name": "app",
+  "name": "ibm-cloud-k8s-nmap-integration",
   "version": "1.0.0",
-  "description": "node nmap findings utility",
+  "description": "IBM Cloud K8S Nmap Integration",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "abhishek dhawan",
   "license": "ISC",
   "dependencies": {
+    "ibm-security-advisor": "^3.0.1",
     "node-nmap": "^4.0.0",
     "request": "^2.88.0",
     "winston": "^3.2.1",

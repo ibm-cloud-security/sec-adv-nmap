@@ -66,7 +66,7 @@ var createNewCardTemplate = {
         }
       }, {
         "kind": "NUMERIC",
-        "text": "Data Link layer",
+        "text": "Data Link Layer",
         "default_time_range": "1d",
         "value_type": {
           "kind": "FINDING_COUNT",

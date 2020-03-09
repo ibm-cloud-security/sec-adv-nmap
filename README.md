@@ -51,7 +51,7 @@ E.g. You ran Application layer scan which recorded finding as open port 22/ssh i
      Now, if you run same scan again without fixing above existing vulnerability within 24 hours , it will add finding to Card again and now count for Application Layer will be 2 although same port is still open and no other.
 Therefore, if you want to run scan again within 24 hours and see only latest vulnerabilities, please clear findings in card using standard Findings API methods via swagger docs or postman etc.  
 
-### Updating dahboard card:      
+### Updating dashboard card:      
  Section name,Card title and card subtitle can be changed by supplying new values in respective fields in <project_root>/src/adapters/findingsApi/config.js file. Default values are : 
  ```
    "sectionName": 'Network',
