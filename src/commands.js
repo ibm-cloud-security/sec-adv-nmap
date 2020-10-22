@@ -25,6 +25,7 @@ function exporterFunction(logger) {
                 await scanAndRecordFindings(target, additionalParameters, portRange, scanType = 'applicationLayerScan').catch((error) => {
                     logger.log("error", "Application layer scan failed with error: " + error)
                 })
+                process.exit()
             }
         })
 
@@ -36,6 +37,7 @@ function exporterFunction(logger) {
                 await scanAndRecordFindings(target, additionalParameters, portRange, scanType = 'transportLayerScan').catch((error) => {
                     logger.log("error", "Transport layer scan failed with error: " + error)
                 })
+                process.exit()
             }
         })
 
@@ -47,6 +49,7 @@ function exporterFunction(logger) {
                 await scanAndRecordFindings(target, additionalParameters, portRange, scanType = 'networkLayerScan').catch((error) => {
                     logger.log("error", "Network layer scan failed with error: " + error)
                 })
+                process.exit()
             }
         })
 
@@ -57,6 +60,8 @@ function exporterFunction(logger) {
                 await scanAndRecordFindings(target, additionalParameters, portRange, scanType = 'dataLinkLayerScan').catch((error) => {
                     logger.log("error", "Data link layer scan failed with error: " + error)
                 })
+
+                process.exit()
             }
         })
 
@@ -77,6 +82,8 @@ function exporterFunction(logger) {
                 await scanAndRecordFindings(target, additionalParameters, portRange, scanType = 'dataLinkLayerScan').catch((error) => {
                     logger.log("error", "Data link layer scan failed with error: " + error)
                 })
+
+                process.exit()
 
             }
         })
@@ -128,7 +135,6 @@ function exporterFunction(logger) {
 
             if (scanResults.length < 1) {
                 logger.log("info", "Scan " + scanType + " is complete, no vulnerabilities found")
-                process.exit()
             }
             logger.log("debug","Scan results are: " + JSON.stringify(scanResults))
             
@@ -146,7 +152,6 @@ function exporterFunction(logger) {
 
         function logErrorAndExit(error,errorMessage) {
             logger.log("error", errorMessage + error)
-            process.exit()
         }
 
     }
