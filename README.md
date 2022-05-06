@@ -1,3 +1,5 @@
+# DEPRECATED
+
 # Prerequisites :  
 1. Nmap must be installed and `nmap` command must be available in system's path.  
    Nmap can be installed from : https://nmap.org/download.html
