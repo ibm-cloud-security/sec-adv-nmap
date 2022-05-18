@@ -1,4 +1,5 @@
 # DEPRECATED
+The Security Insights feature is deprecated and will no longer be supported.
 
 # Prerequisites :  
 1. Nmap must be installed and `nmap` command must be available in system's path.  
